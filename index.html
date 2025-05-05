@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Code-Like Text Compare</title>
+  <style>
+    body {
+      background-color: #1e1e1e;
+      color: #d4d4d4;
+      font-family: Consolas, monospace;
+      padding: 20px;
+    }
+
+    h2 {
+      color: #ffffff;
+    }
+
+    textarea {
+      width: 45%;
+      height: 300px;
+      background-color: #252526;
+      color: #dcdcdc;
+      border: 1px solid #3c3c3c;
+      padding: 10px;
+      font-family: Consolas, monospace;
+      resize: vertical;
+    }
+
+    button {
+      background-color: #0e639c;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 14px;
+      margin-top: 10px;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+
+    .diff-box {
+      display: flex;
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    .diff {
+      width: 45%;
+      white-space: pre-wrap;
+      background-color: #1e1e1e;
+      border: 1px solid #3c3c3c;
+      padding: 10px;
+      min-height: 300px;
+      overflow-x: auto;
+      display: none; /* Hide by default */
+    }
+
+    .added {
+      background-color: rgba(144, 238, 144, 0.3); /* Light green */
+      color: #b5f4a5;
+    }
+
+    .removed {
+      background-color: rgba(255, 99, 71, 0.3); /* Light red */
+      color: #ffbaba;
+    }
+
+    .line-number {
+      display: inline-block;
+      width: 30px;
+      color: #6a9955;
+      margin-right: 10px;
+      text-align: right;
+      user-select: none;
+    }
+
+    .font-control {
+      display: none; /* Hide by default */
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    .font-control span {
+      display: inline-block;
+      margin: 0 10px;
+      font-size: 14px;
+      color: #d4d4d4;
+    }
+  </style>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/vs2015.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+</head>
+<body>
+  <h2>🔍 Code-Like Text Compare Tool</h2>
+  <textarea id="left" placeholder="Enter original code or text..."></textarea>
+  <textarea id="right" placeholder="Enter updated code or text..."></textarea><br>
+  <button onclick="compare()">Compare</button>
+
+  <div class="font-control" id="fontControl">
+    <button onclick="changeFontSize(-1)">-</button>
+    <span>Font Size</span>
+    <button onclick="changeFontSize(1)">+</button>
+  </div>
+
+  <div class="diff-box">
+    <div id="leftResult" class="diff"></div>
+    <div id="rightResult" class="diff"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/diff@5.1.0/dist/diff.min.js"></script>
+  <script>
+    let fontSize = 14;
+
+    function changeFontSize(delta) {
+      fontSize += delta;
+      if (fontSize < 10) fontSize = 10; // Minimum font size
+      document.querySelectorAll('.diff').forEach(diff => {
+        diff.style.fontSize = `${fontSize}px`;
+      });
+    }
+
+    function compare() {
+      const left = document.getElementById("left").value;
+      const right = document.getElementById("right").value;
+
+      const diff = Diff.diffLines(left, right); // use lines for code
+
+      let leftHTML = '', rightHTML = '';
+      let lineNum = 1;
+
+      diff.forEach(part => {
+        const safeValue = part.value.replace(/</g, "<").replace(/>/g, ">").split('\n');
+        safeValue.forEach((line, index) => {
+          if (line || index < safeValue.length - 1) { // Avoid empty line at the end
+            if (part.added) {
+              rightHTML += `<span class="line-number">${lineNum}</span><span class="added">${line}</span><br>`;
+            } else if (part.removed) {
+              leftHTML += `<span class="line-number">${lineNum}</span><span class="removed">${line}</span><br>`;
+            } else {
+              leftHTML += `<span class="line-number">${lineNum}</span>${line}<br>`;
+              rightHTML += `<span class="line-number">${lineNum}</span>${line}<br>`;
+            }
+            lineNum++;
+          }
+        });
+      });
+
+      const leftResult = document.getElementById("leftResult");
+      const rightResult = document.getElementById("rightResult");
+      leftResult.innerHTML = leftHTML;
+      rightResult.innerHTML = rightHTML;
+      leftResult.style.display = 'block'; // Show on compare
+      rightResult.style.display = 'block'; // Show on compare
+
+      document.getElementById("fontControl").style.display = 'block'; // Show font controls on compare
+    }
+  </script>
+</body>
+</html>
